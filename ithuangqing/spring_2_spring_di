@@ -1,0 +1,330 @@
+chapter 1 - 什么是DI（依赖注入）
+
+回忆：之前降了 IOC容器  和  控制反转
+现在在这个基础上讲：DI  依赖注入
+
+如果 m对象 依赖于 n对象，spring IOC 在管理 m对象时也把 n对象给注入进去
+
+
+
+chapter 2 - 依赖注入（上）
+
+public class Cat {
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+public class User {
+    private String name;
+    private int age;
+    private Cat cat;
+
+    public User() {}
+
+    public void setName(String name) { this.name = name; }
+
+    public String getName() { return name; }
+
+    public void setAge(int age) { this.age = age; }
+
+    public int getAge() { return age; }
+
+    public void setCat(Cat cat) {
+        this.cat = cat;
+    }
+
+    public Cat getCat() {
+        return cat;
+    }
+}
+
+<bean id="user" class="com.ithuangqing.bean.User"/>
+<bean id="cat" class="com.ithuangqing.bean.Cat"/>
+
+ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+
+Cat cat = (Cat) applicationContext.getBean("cat");
+cat.setName("小毛皮");
+
+User user = (User) applicationContext.getBean("user");
+user.setName("zhangsan");
+user.setAge(25);
+user.setCat(cat);
+
+
+下面通过 spring 中的 依赖注入 的方式去做：
+
+<bean id="user" class="com.ithuangqing.bean.User"/>      （自己加/悟：这里在实例化的时候是调用了无参构造（所以这里 user实例 创建完后，filed会是”零假空“）；如果 User class 中没有无参构造，这里就会报错；如果没有定义任何构造函数，这里不会报错，因为 java 会默认加一个无参构造）
+
+<bean id="cat" class="com.ithuangqing.bean.Cat">
+    <property name="name" value="小毛皮"/>              这里就相当于给 cat 里面的 name 属性赋值了；如果 Cat 类中没有 setName 函数，这里这样做就是不行的🙅（自悟：这里其实就是调用了对应 property 的 setter）
+</bean>
+
+
+
+chapter 3 - 依赖注入（下）
+
+<bean id="user" class="com.ithuangqing.bean.User">
+    <property name="name" value="张三"/>               能通过这种方式注入是因为在 User类中提供了 setter 
+    <property name="age" value="25"/>
+</bean>
+
+<bean id="cat" class="com.ithuangqing.bean.Cat">
+    <property name="name" value="大毛皮"/>              这里就相当于给 cat 里面的 name 属性赋值了；如果 Cat 类中没有 setName 函数，这里这样做就是不行的🙅（自悟：这里其实就是调用了对应 property 的 setter）
+</bean>
+
+以上是通过 setter 的方法进行构造
+
+
+还有通过 构造器（constructor）的方法进行构造 [构造器注入]
+
+public Class User {
+    private String name;
+    private int age;
+    private Cat cat;
+
+    public User(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+
+这时，如果这样写，就会报错: No matching constructor found in class 'User'
+
+<bean id="user" class="com.ithuangqing.bean.User">
+    <property name="name" value="张三"/>               能通过这种方式注入是因为在 User类中提供了 setter 
+    <property name="age" value="25"/>
+</bean>
+
+原因是，User class 中没有 无参构造了
+
+需要改成如下：
+
+<bean id="user" class="com.ithuangqing.bean.User">
+    <constructor-arg name="name" value="李四"/>
+    <constructor-arg name="age" value="22"/>        注意这里 age 虽然是 int 类型，但是也加了 引号
+    <property name="cat" ref="cat"/>                正如之前，如果你注入的是一个属性，就用 value；但是这里注入的是一个对象，注入对象用 ref        这里的知识点就是：对象注入！！！
+</bean>
+
+<bean id="cat" class="com.ithuangqing.bean.Cat">
+    <property name="name" value="大毛皮"/>            这里与上面一样
+</bean>
+
+ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+
+Cat cat = (Cat) applicationContext.getBean("cat");
+User user = (User) applicationContext.getBean("user");              // User{name='李四', age=22, cat=Cat{name='大毛皮'}}
+
+
+
+chapter 4 - 依赖注入小结
+
+<bean id="user" class="com.ithuangqing.bean.User">
+    <constructor-arg name="name" value="李四"/>      通过构造器的 属性注入
+    <constructor-arg name="age" value="22"/>            
+    <property name="cat" ref="cat"/>                注意：ref 用于对象注入！！！     这里的知识点就是：对象注入！！！
+</bean>
+
+<bean id="cat" class="com.ithuangqing.bean.Cat">
+    <property name="name" value="大毛皮"/>            通过 setter的 属性注入         注意：这里用的是 value，不是 ref
+</bean>
+
+
+
+chapter 5 - 特殊字符的属性注入
+
+<bean id="cat" class="com.ithuangqing.bean.Cat">
+    <property name="name">
+        <value>毛皮</value>             这种写法也是可以的，但是 对于我们这个例子 IDE 会推荐使用上面的👆写法（提示语：Replace <value> with "value" attribute）
+    </property>
+</bean>
+
+但是当有特殊值时就必须使用这种写法了，例如我想让 name 的值是： <毛皮>
+
+<bean id="cat" class="com.ithuangqing.bean.Cat">
+    <property name="name" value="<毛皮>"/>            这种写法不行🙅‍♂️
+</bean>
+
+<bean id="cat" class="com.ithuangqing.bean.Cat">
+    <property name="name">
+        <value><毛皮></value>             这种写法也不行🙅
+    </property>
+</bean>
+
+需要这样写：
+
+<bean id="cat" class="com.ithuangqing.bean.Cat">
+    <property name="name">
+        <value><![CDATA[<毛皮>]]></value>
+    </property>
+</bean>
+
+Cat cat = (Cat) applicationContext.getBean('cat');      // Cat{name='<毛皮>'}
+
+<![CDATA[  (特殊字符放在这个里面)  ]]>
+
+
+
+chapter 6 - P命名空间注入
+
+用 p标签 - 这里要用单标签
+
+会多一个 xmlns:p="http://www.springframework.org/schema/p"   多了一个这个 p标签 命名空间，可以用这个 p标签了
+
+<bean id="cat" class="com.ithuangqing.bean.Cat" p:name="p名称命名空间注入"/>       这种 p标签 的方式 和 <property> 一样，本质都是调用 setter方法
+
+Cat cat = (Cat) applicationContext.getBean('cat');      // Cat{name='p名称命名空间注入'}
+
+
+<bean id="user1" class="com.ithuangqing.bean.User" 
+      p:name="张三" p:age="22" p:cat-ref="cat"/>
+这时候 config file 中还会报错：No matching constructor found in class 'User'
+这是因为目前我们的 User class 有一个 constructor
+public User(String name, int age) {
+    this.name = name;
+    this.age = age;
+}
+当我们把这个唯一的 constructor 注释掉之后，就不报错了
+这里为什么可以用 p标签，其原因还是 在 User class 中我们有 setter 
+p标签的底层 还是用了 setter 注入的方式
+下面就是验证👇
+如果我们把 setCat 注释掉，就会报如下错误:
+Attribute p:cat-ref is not allowed here  
+IDE 会提示我们 Create Method 'setCat' in 'User' 
+
+
+
+chapter 7 - List集合属性注入
+
+public class User {
+    private String name;
+    private int age;
+    private Cat cat;
+    private List<String> stringList;           // 现在多加了一个这个 field
+
+    public void setStringList(List<String> stringList) {
+        this.stringList = stringList;
+    }
+}
+
+这节课是想讲：如何把这个 list 集合注入进去
+
+<bean id="user1" class="com.ithuangqing.bean.User" 
+      p:name="张三" p:age="22" p:cat-ref="cat">
+    
+    <property name="stringList">
+        <list>
+            <value>"hello"</value>
+            <value>sss</value>          因为这是一个 List<String> 它默认里边放的就是字符串，所以不用加 ""
+        </list>
+    </property>
+</bean>
+
+之前，如果注入的是普通变量 或 普通对象 都是用的 单标签，但是这里想注入 list，所以需要上面👆这么做
+
+User user = (User) applicationContext.getBean("user1");      // User{name='张三', age=22, cat=Cat{name='p名称命名空间'}, stringList=["hello", sss]}
+⚠️ 注意：上面的 hello有双引号，但是 sss 没有
+
+
+如果往 list 里面添加一个 cat 对象，会报错: Bean must be of 'java.lang.String' type
+
+<bean id="user1" class="com.ithuangqing.bean.User" 
+      p:name="张三" p:age="22" p:cat-ref="cat">
+    
+    <property name="stringList">
+        <list>
+            <value>"hello"</value>
+            <value>sss</value>          因为这是一个 List<String> 它默认里边放的就是字符串，所以不用加 ""
+            <ref bean="cat"></ref>      这一行会报错：Bean must be of 'java.lang.String' type    --> 这是在说，这里添加的 bean 必须是 string 类型
+        </list>
+    </property>
+</bean>
+
+
+如果把 List 的泛型去掉，就不报错了
+
+public class User {
+    private String name;
+    private int age;
+    private Cat cat;
+    private List stringList;           // 现在多加了一个这个 field
+
+    public void setStringList(List stringList) {
+        this.stringList = stringList;
+    }
+}
+
+这是上面的配置就不报错了，但是 IDE 会提示 把
+<ref bean="cat"></ref>
+改成
+<ref bean="cat"/>
+因为 XML tag has empty body （这是提示语）
+
+<bean id="user1" class="com.ithuangqing.bean.User" 
+      p:name="张三" p:age="22" p:cat-ref="cat">
+    
+    <property name="stringList">
+        <list>
+            <value>"hello"</value>
+            <value>sss</value>          
+            <ref bean="cat"/>           只有这行与上面不同
+        </list>
+    </property>
+</bean>
+
+User user = (User) applicationContext.getBean("user1");      // User{name='张三', age=22, cat=Cat{name='p名称命名空间'}, stringList=["hello", sss, Cat{name='p名称命名空间注入'}]}
+
+
+
+chapter 8 - Map集合属性注入
+
+这节课：关于映射关系（Map 类型）的注入
+
+public class User {
+    private String name;
+    private int age;
+    private Cat cat;
+    private List stringList;
+    private Map map;                 // 这里加了一个 Map 属性
+
+    public void setMap(Map map) {
+        this.map = map;
+    }
+}
+
+<bean id="user1" class="com.ithuangqing.bean.User" 
+      p:name="张三" p:age="22" p:cat-ref="cat">              注意这里的 cat-ref！！
+    
+    <property name="stringList">
+        <list>
+            <value>"hello"</value>
+            <value>sss</value>          
+            <ref bean="cat"/>           只有这行与上面不同
+        </list>
+    </property>
+
+    <property name="map">
+        <map>
+            <entry key="1" value="1"></entry>        每一个 entry 就是一个键值对     同样，这里会提示改成下面的形式 👇
+            <entry key="2" value="2"/>
+            <entry key="3" value-ref="cat"/>         entry 中注入对象
+        </map>
+    </property>
+</bean>
+
+User user = (User) applicationContext.getBean("user1");      
+
+// User{name='张三', age=22, cat=Cat{name='p名称命名空间'}, stringList=["hello", sss, Cat{name='p名称命名空间注入'}], map={1=1, 2=2, 3=Cat{name='p名称命名空间注入'}}}
+
+
+
+
+
+

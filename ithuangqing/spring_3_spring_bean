@@ -1,0 +1,178 @@
+chapter 1 - SpringBean 的学习
+
+Spring Bean 就是我们没有学习框架之前 我们说的那个 “对象”
+Spring 当中就把 对象 叫做 Spring Bean，简称 Bean
+
+把对象全部交给 Spring IOC 容器去管理
+
+Bean 会有 作用域 和 生命周期，接下来我们就来学习关于 bean 需要掌握的东西，尤其需要重点关注 bean 的生命周期！！
+
+
+
+chapter 2 - 管理 第三方 Bean（Druid）
+
+之前是：
+如果需要 spring IOC 去管理这个 bean，就在配置文件中去 配置/装配 这个 bean 
+这是自己创建的 class
+
+那么如果是想创建第三方 package 中的 class 的 bean 怎么办呢？（如何管理第三方 bean？）
+
+这里以 阿里的 Druid 为例 （Druid 是一个 数据库连接池）
+
+先通过 maven 把 Durid 的 jar包 引入,  com.alibaba:druid:1.2.15
+
+<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">           （对于 数据库连接池，id 我们通常取成 dataSource）
+    <property name="driverClassName" value=""/>                         (driverClassName 就是 jdbc连接驱动)
+    <property name="url" value=""/>
+    <property name="username" value="root"/>
+    <property name="password" value="root"/>
+</bean>
+这里就创建了一个 bean 对象，并交给了 spring IOC 去管理 
+
+
+但是 db的 username 和 password 通常不会像上面👆那样 hard code 在 config file 里
+通常是在 resources folder 下，创建一个
+db.properties
+
+db.driverClassName=com.mysql.jdbc.Driver         （需要用 maven 把这个 mysql 的 driver 给引入进来）
+db.url=jdbc:mysql://localhost:3306/mydb          （mysql 的端口通常是 3306）
+db.username=root
+db.password=root 
+
+
+加载外部的 properties 文件，见下面：
+
+<context:property-placeholder location="classpath:db.properties"/>              这一行会导致引入这个标签🏷️： xmlns:context="http://www.springframework.org/schema/context"
+                                                                    这里的 location 是需要找到 这个properties file，resources 这个folder 的路径就被称为 classpath
+<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+    <property name="driverClassName" value="${db.driverClassName}"/>            这是这里就可以从 properties file 里边取值了
+    <property name="url" value="${db.url}"/>
+    <property name="username" value="${db.username}"/>
+    <property name="password" value="${db.password}"/>
+</bean>
+
+
+
+chapter 3 - 工厂 Bean 之 FactoryBean
+
+本节课讲：Spring 的两种 bean
+
+spring 中的 bean 对象其实分为两种：
+1. 普通的 bean ： 完全交给了 IOC 去管理，普通的 bean 是由 IOC容器 创建的（绝大多数bean 都是普通 bean，完全交由IOC去管理，但是有一些例外，有些 bean我们不想交由IOC管理，我们希望这个控制权能回到我们自己手中，这个时候就需要是有工厂 bean）
+2. 工厂 bean ： 想把控制权回到自己手中，不想交给 IOC容器 去统一管理，程序员希望参与到 bean 对象的创建过程当中
+
+有的时候，不想把所有东西都交给 IOC 去管理 
+程序员想参与到 bean 对象的创建当中  -->  使用工厂 bean 就可以实现这个，叫做 FactoryBean
+
+需要继承 FactoryBean 这个接口
+
+public class MyFactory implements FactoryBean {
+    
+    @Override
+    public Object getObject() throws Exception {
+        Cat cat = new Cat();
+        // 此处省略很多行对 cat 操作的代码 ....
+        return cat;
+    }
+
+    @Override 
+    public Class<?> getObjectType() {
+        return Cat.class;           // 返回创建的对象的 class
+    }
+
+    @Override
+    public boolean isSignleton() {
+        return FactoryBean.super.isSingleton();
+    }
+}
+
+<bean id="myfactory" class="com.ithuangqing.factory.MyFactory"/>
+
+applicationContext.getBean("myfactory", Cat.class);         // 注意⚠️：这里是 Cat.class, 不是 MyFactory.class !!!!
+
+以上展示的就是 通过 工厂bean 来创建 bean
+
+FactoryBean 用得不多（但也是有个知识点），一般情况下就用普通 Bean
+
+
+
+chapter 4 - Bean对象 的 scope属性
+
+单例 - 只创建一个，无论什么时候去获取它，始终获取的都是那一个
+
+
+<bean id="cat" class="com.ithuangqing.bean.Cat" p:name="p名称命名空间注入"/>
+
+Cat cat = applicationContext.getBean("cat", Cat.Bean);
+Cat cat1 = applicationContext.getBean("cat", Cat.Bean);
+System.out.println(cat == cat1);       // true
+这说明，默认情况下，IOC容器给我们创建的对象是单例的  ->  无论调用多少次 getBean，始终返回的都是同一个对象
+
+
+输入scope属性后，IDE会提示 scope属性 有两种值：
+prototype    -->  就是多例
+singleton    -->  就是单例
+默认值就是 单例
+
+
+当你向下面👇一样写了 scope="singleton" 之后
+
+<bean scope="singleton" id="cat" class="com.ithuangqing.bean.Cat" p:name="p名称命名空间注入"/>
+
+会提示：Attribute scope with default value 'singleton' is superfluous,
+会让你 Remove "scope" attribute 
+因为 默认值就是 singleton 
+
+
+改成 多例 的：
+<bean scope="prototype" id="cat" class="com.ithuangqing.bean.Cat" p:name="p名称命名空间注入"/>
+
+Cat cat = applicationContext.getBean("cat", Cat.Bean);
+Cat cat1 = applicationContext.getBean("cat", Cat.Bean);
+System.out.println(cat == cat1);       // false
+
+
+对于 单例，在 IOC容器 被创建的时候，
+ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+就已经把 Cat 对象创建出来了
+
+但如果是 多例 的，就不会在容器被创建时 就实例化对象，而是 “在每次调用 getBean 的时候，就创建一个对象”
+
+
+
+chapter 5 - Bean的4个作用域
+
+上节课：通过给 bean 添加 scope 属性，给它划分是单例 还是 多例
+
+关于 作用域（scope）有4个值：
+1. singleton（默认）： 代表单例，只有一个实例对象，创建容器的时候创建
+2. prototype：多例，在容器中有多个对象，调用 getBean 的时候创建 （每调用一次 getBean，它就给你创建一个新的值）
+3. request： 请求域    当前请求有效，离开请求域无效，（那么如何判断是不是当前的请求域呢？）URL不变即为当前请求域   （网址 url链接 不变，就是当前请求域；网址链接变了，就不再是当前请求域）
+4. session： 会话域    当前会话有效，离开无效，当前浏览器不关闭不更换即为当前会话（只要当前浏览器不关闭不更换，就是当前会话）
+
+
+
+chapter 6 - 初识 bean 的生命周期 
+
+熟悉 bean的生命周期 可能会觉得比较复杂，因为想要把 bean 的生命周期搞的特别清楚，就涉及到 spring 的底层源码
+
+生命周期：就是 从bean 的一开始，到结束，都经历了那些东西
+
+bean 的生命周期（4个阶段）：
+1. 实例化（通过 new 把bean对象给创建出来）
+2. 为 bean进行 属性注入
+3. 初始化 bean（对 bean 进行初始化）   --> 初始化 bean 后，bean 就可以用了
+4. 销毁 bean    -->   在容器关闭的时候才会销毁 bean 
+
+
+
+chapter 7 - 代码演示 Bean 的 生命周期 
+
+1. 实例化（实例化我们的 bean）
+2. 属性注入
+3. 初始化 bean  --> 之后，bean就可以使用了
+4. 容器关闭，bean被销毁
+
+本节课：通过代码，对这4个部分最一个演示
+
+

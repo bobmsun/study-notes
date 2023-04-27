@@ -1,0 +1,265 @@
+chapter 1 - Spring 介绍
+
+spring framework 是 spring 家族的核心
+spring 家族还包括 spring boot, spring cloud, spring data, etc.
+
+
+
+chapter 2 - Spring 第一印象
+
+Spring 中凸显的特征：IOC，AOP，DI
+
+IOC: Inversion of Control  控制反转
+AOP: Aspect-oriented programming   面向切面编程
+DI: Dependency Injection    依赖注入
+
+IOC 是 spring 中一个非常重要的、鲜明的特征！！！
+
+控制反转（IOC）：
+有 Spring 之前，创建对象是通过 new 的方式；
+有了 Spring 之后，通过 bean 的方式，把所有的对象全部交给 Spring 去管理；
+有了 Spring，不需要自己在通过 new 的方式去手动地创建对象了，把对象全部交给 Spring 去管理，
+生产对象的过程我们交给了 Spring，当我们需要对象的时候，我们就去找 Spring 去要，
+这就是为什么叫 “控制反转”
+
+
+
+chapter 4 - 搭建 Spring 项目
+
+搭建一个最最基础的 Spring project，需要引入 4个 jar 包：
+Spring Context
+Spring Core
+Spring AOP 
+Spring Beans 
+
+Maven 有一个特点：当你引入一个 jar 包的时候，这个jar包如果需要依赖其他的jar包，它就会同时把这个jar包依赖的其他jar包同时给引入进来
+所以，也不用将4 个 jar 包全部手动引入，只引入一个 spring context，maven 就会把其他3个都引入进来，因为有dependency 在
+
+总结：这节课我们做的是
+创建一个 maven project，如果想用 spring 框架的话，就引入一个 spring context 
+
+
+
+chapter 5 - IOC 容器的理解
+
+提到 IOC 控制反转，就会提到 IOC 容器
+
+IOC 控制反转
+就是指，不需要自己 new 对象了，所有对象交给 Spring 去管理，那么 spring 靠什么去具体管理这个对象呢？  --> IOC 容器 
+
+IOC 是一种理念，它需要有一个具体的执行，这个具体的执行就是 IOC 容器 
+
+对象不需要自己 new 了，所有对象都统一交给 IOC 容器来管理；
+这里的容器，就可以看作是 软件的运行环境
+
+IOC 容器里边管理的都是对象，spring 当中，所有的对象都交给 IOC容器 去管理；IOC 容器就相当于一个底层的运行环境
+对象的创建、实例化、配置 全部由我们的 IOC容器 去管理 
+
+
+
+chapter 6 - 进一步理解控制反转
+
+IOC容器的核心就是来管理对象，提供一个底层基础的环境
+
+这节课：再进一步理解一下：“控制反转”是什么东西？为什么叫 ”控制反转“？
+
+
+有 “控制反转” 之前：
+如果现在 A 类中使用 B，需要在 A类中 new B() 去创建一个 B 的实例对象
+A - 调用者 - A 有 “创建被调用者” 的权利
+B - 被调用者
+
+
+有 “控制反转” 之后：
+A 需要等待 Spring 的 IOC 统一地去创建、实例化对象
+所有对象都由 IOC 容器统一管理 
+“去创建 B 的实例” 的这项工作交给了 IOC 容器 
+A 如果想用，需要等 IOC 容器把 B 的实例创建出来后，管 IOC 去要 
+
+
+
+chapter 7 - SpringBean 和 JavaBean
+
+这节课：讲一讲 bean； Spring Bean vs. Java Bean 
+
+所有的对象都交给 IOC容器 去管理 
+在 Spring 框架体系当中，所有的对象它都给它起了个名字，叫做 Spring Bean
+在 Spring 大的体系当中，所有的对象都叫做 Spring Bean，有的时候就简称 Bean 
+
+所以说，Spring Bean 就是 对象！！
+
+但是，Java Bean 是一种特殊的对象 
+
+类通过实例化产生对象 
+
+这个类必须满足某些条件，你这个类产生的对象才能叫做 bean 对象（Java Bean）
+Java Bean 是一种对类的约束
+
+4 个条件：
+    所有的属性都必须是私有的（private）
+    然后必须给私有属性提供 setter 和 getter 
+    同时类还要有一个无参的构造函数 
+    类要实现 序列化接口 implements Serializable
+这样的类才能称之为 Java Bean 
+
+public class User implements Serializable {
+    private String name;
+    private int age;
+
+    public User() {
+
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public int getAge() {
+        return age;
+    }
+}
+
+Java Bean 一定是一个 Spring Bean（在 Spring 的框架下）
+Spring Bean 不一定是 Java Bean 
+
+
+
+chapter 8 - 初识 Spring 的配置文件
+
+Spring 中通过 IOC容器 去管理我们所有的 Bean 对象 
+
+IOC容器 对 bean 对象的管理是如何实现的呢？  -->  配置
+
+Spring IOC容器会去读取配置文件，它才会知道：这是你让我创建/管理的 bean 对象 --> 将对象进行一些实例化 / 装配
+
+Spring 核心的配置文件：applicationContext.xml  (新建的时候建在 resource 文件夹下)
+
+
+
+chapter 9 - 引入配置文件
+
+回顾一下我们做了哪些事情：
+
+创建一个 maven 项目  -->  引入 spring 相关的 jar包  -->  创建 spring config 文件 applicationContext.xml (放在 resource folder 下)  
+--> 把这个配置文件添加到 spring 项目中
+
+
+
+chapter 10 - 使用 IOC 容器创建对象
+
+在 IOC容器 中管理的所有对象都可以成为 (spring) Bean 
+
+<bean id="user" class="com.ithuangqing.bean.User"/>
+生成一个对象，名字叫 user，这个对象是指到 com.ithuangqing.bean.User 这个类的   -->  装配 user 对象 
+
+装配好了，用的时候需要获取：
+ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml")     // 这一步就是在读取配置文件
+User user = (User) applicationContext.getBean("user")        // 通过 id 来获取对象，他得到的是 Object 类型，我们需要给它强转一下即可
+
+这时 user 中的 field： name 是 null， age 是 0
+
+
+
+chapter 11 - BeanFactory 和 ApplicationContext 
+
+Spring IOC容器 通过配置文件去管理你的 bean 对象
+需要对象的时候，就向 IOC容器 中去获取它
+
+这个 ApplicationConext 就是一个具体的容器
+
+我们通过读取配置文件，得到这个容器；在通过 IOC容器 去得到我们这个 bean 对象 
+
+ApplicationContext 是一个接口
+ApplicationContext 这个接口继承了（extends）了一些接口，这些接口继承了 BeanFactory 这个接口  
+
+BeanFactory 是最原始的 IOC容器，它提供了 IOC容器最基本的功能
+
+ApplicationConext 这个接口在原有的 BeanFactory 接口提供的最基础的功能之外 进行了扩展
+
+
+
+chapter 12 - 获取 Bean对象 的三种方式
+
+第一种：getBean(id)
+这种方式的缺点：需要强转，因为返回的是 object 对象
+
+<bean id="user" class="com.ithuangqing.bean.User"/>
+
+ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");     // 这一步就是在读取配置文件
+User user = (User) applicationContext.getBean("user");
+
+
+第二种：也是 getBean，但不是通过 id 了，而是通过 class   getBean(class) 
+
+User user = applicationContext.getBean(User.class);    // 通过 反射
+
+这种方法的缺点：如果有多个同类型的 bean，会出错
+（对象是一个类的实例，一个类可以产生很多个对象）
+
+<bean id="user1" class="com.ithuangqing.bean.User">
+    <constructor-arg name="name" value="李四"/>
+    <constructor-arg name="age" value="22"/>
+    <property name="cat" ref="cat"/>                      引入了一个 Cat 对象，这里是 “依赖注入”
+</bean>
+
+<bean id="cat" class="com.ithuangqing.bean.Cat">
+    <property name="name" value="大毛皮"/>
+</bean>
+
+User user = applicationContext.getBean(User.class);       // User{name='李四', age=22, cat=Cat{name='大毛皮'}}
+
+User user = applicationContext.getBean("user");         // 会报错：No bean named 'user' available
+
+
+如果再加入这个：
+
+<bean id="user2" class="com.ithuangqing.bean.User">
+    <constructor-arg index="0" value="李四"/>                注意这里是 index（除了name外，还有 index）
+    <constructor-arg index="1" value="22"/>
+    <property name="cat" ref="cat"/>
+</bean>
+
+User user = applicationContext.getBean(User.class);    // 会报错：No qualifying bean of type 'com.ithuangqing.bean.User' available: expected single matching bean but found 2: user1,user2
+
+
+
+此时的 User class
+
+class User {
+    private String name;
+    private int age;
+    private Cat cat;
+
+    public Cat getCat() {
+        return cat;
+    }
+
+    public void setCat(Cat cat) {
+        this.cat = cat;
+    }
+
+    public User(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+
+
+第三种：（这种是我们所推荐的）getBean(id, class)  把上面两种方式结合（用 id 和 class）
+User user = applicationContext.getBean("user", User.class);
+
+这样就既不需要强转，也解决了“不知道找谁”的问题
+
+
+
+
+
+
