@@ -168,11 +168,114 @@ bean 的生命周期（4个阶段）：
 
 chapter 7 - 代码演示 Bean 的 生命周期 
 
-1. 实例化（实例化我们的 bean）
+一个 bean 从最开始产生 到 最后消失 它都经历了哪些阶段？  4个阶段
+1. 实例化（实例化我们的 bean）：实例化对象其实就是通过构造器来实例化我们的对象
 2. 属性注入
 3. 初始化 bean  --> 之后，bean就可以使用了
 4. 容器关闭，bean被销毁
 
 本节课：通过代码，对这4个部分最一个演示
 
+public class Cat {
+    private String name;
+
+    public Cat() {
+        System.out.println("cat对象实例化了.....");
+    }
+
+    public String getName() { return name; }
+
+    public void setName(String name) { 
+        System.out.println("bean属性注入.....");
+        this.name = name; 
+    }
+
+    // 初始化对象
+    public void init() {
+        System.out.print("初始化bean.....");
+    }
+
+    // 销毁bean
+    public void die() {
+        System.out.println("销魂bean.....")
+    }
+
+    @Override 
+    public String toString() {
+        return "Cat{" +
+                 "name='" + name + '\'' + 
+                 '}';
+    }
+}
+
+<bean init-method="init" 
+      destroy-method="die"
+      id="cat" class="com.ithuangqing.bean.Cat" 
+      p:name="p名称命名空间注入"/>
+
+ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+Cat cat = applicationContext.getBean("cat", Cat.class);
+System.out.println("cat = " + cat);
+
+会打印：
+cat对象实例化了.....                             --> 这说明了：实例化对象其实就是通过构造器来实例化我们的对象
+bean属性注入.....                               --> p标签的本质就是 通过 setter 来注入
+初识化bean.....
+cat = Cat{name='p命名空间注入'}
+
+
+销毁 bean 是在 容器关闭的时候
+applicationContext 其实就是我们的 容器 ！！！！！
+
+
+下面想展示：bean 是在容器关闭的时候才被销毁
+
+ConfigurableApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");      // ConfigurableApplicationContext 接口继承了 ApplicationContext 接口, 还继承了 Lifecycle 接口 和 Closable 接口
+Cat cat = applicationContext.getBean("cat", Cat.class);
+System.out.println("cat = " + cat);
+
+applicationContext.close();            // 关闭容器
+
+会打印：
+cat对象实例化了.....                             --> 这说明了：实例化对象其实就是通过构造器来实例化我们的对象
+bean属性注入.....                               --> p标签的本质就是 通过 setter 来注入
+初识化bean.....
+cat = Cat{name='p命名空间注入'}
+销毁bean....
+
+ApplicationContext 这个接口/容器 没有一个针对生命周期 进行关闭的方法
+ConfigurableApplicationContext 接口继承了 ApplicationContext 接口, 还继承了 Lifecycle 接口 和 Closable 接口  ---> 就具备了“关闭容器”的功能
+
+？？？？自我问题：那 ApplicationContext 不关闭吗？？
+
+
+
+chapter 8 - bean 的后置处理器
+
+bean 的生命周期： 
+1. 实例化 
+2. 属性注入 
+3. 初始化 bean 
+4. 销毁 bean （在容器关闭时）
+
+bean 的后置处理器是针对于 “初始化” 这一步   -->  后置处理器 在初始化的 前 & 后去做一些事情
+
+需要实现 BeanPostProcess 接口 
+
+public class TestBeanProcessor implements BeanPostProcessor {
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeanException {
+        return BeanPostProcessor.super.postProcessAfterInitialization(bean, beanName);
+    }
+
+    @Override 
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeanException {
+        return BeanPostProcessor.super.postProcessBeforeInitialization(bean, beanName);
+    }
+}
+
+
+庆哥您好，我是您的 Java 终身会员，您的课讲解特别清晰，最近在跟着课程学习 spring 
+我发现 spring 的视频 在 spring bean 之后就没有了，有一些 folder是空的，没有视频，想问下您，这是您还没录制视频吗？还是我需要在别的地方找呢？谢谢
 
