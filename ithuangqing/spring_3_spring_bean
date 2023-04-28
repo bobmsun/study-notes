@@ -45,7 +45,7 @@ db.password=root
 <context:property-placeholder location="classpath:db.properties"/>              这一行会导致引入这个标签🏷️： xmlns:context="http://www.springframework.org/schema/context"
                                                                     这里的 location 是需要找到 这个properties file，resources 这个folder 的路径就被称为 classpath
 <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
-    <property name="driverClassName" value="${db.driverClassName}"/>            这是这里就可以从 properties file 里边取值了
+    <property name="driverClassName" value="${db.driverClassName}"/>            这时这里就可以从 properties file 里边取值了
     <property name="url" value="${db.url}"/>
     <property name="username" value="${db.username}"/>
     <property name="password" value="${db.password}"/>
@@ -92,7 +92,7 @@ applicationContext.getBean("myfactory", Cat.class);         // 注意⚠️：�
 
 以上展示的就是 通过 工厂bean 来创建 bean
 
-FactoryBean 用得不多（但也是有个知识点），一般情况下就用普通 Bean
+FactoryBean 用得不多（但也是一个知识点），一般情况下就用普通 Bean
 
 
 
@@ -115,7 +115,7 @@ singleton    -->  就是单例
 默认值就是 单例
 
 
-当你向下面👇一样写了 scope="singleton" 之后
+当你像下面👇一样写了 scope="singleton" 之后
 
 <bean scope="singleton" id="cat" class="com.ithuangqing.bean.Cat" p:name="p名称命名空间注入"/>
 
@@ -154,9 +154,9 @@ chapter 5 - Bean的4个作用域
 
 chapter 6 - 初识 bean 的生命周期 
 
-熟悉 bean的生命周期 可能会觉得比较复杂，因为想要把 bean 的生命周期搞的特别清楚，就涉及到 spring 的底层源码
+熟悉 bean的生命周期 的时候 可能会觉得比较复杂，因为想要把 bean 的生命周期搞的特别清楚，就涉及到 spring 的底层源码
 
-生命周期：就是 从bean 的一开始，到结束，都经历了那些东西
+生命周期：就是 从bean 的一开始，到结束，都经历了哪些东西
 
 bean 的生命周期（4个阶段）：
 1. 实例化（通过 new 把bean对象给创建出来）
@@ -197,7 +197,7 @@ public class Cat {
 
     // 销毁bean
     public void die() {
-        System.out.println("销魂bean.....")
+        System.out.println("销毁bean.....")
     }
 
     @Override 
@@ -260,22 +260,46 @@ bean 的生命周期：
 
 bean 的后置处理器是针对于 “初始化” 这一步   -->  后置处理器 在初始化的 前 & 后去做一些事情
 
-需要实现 BeanPostProcess 接口 
+我们下面👇创建一个 bean的后置处理器
+需要实现 BeanPostProcessor 接口 
 
 public class TestBeanProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeanException {
+
+        System.out.println("-----在初始化之前执行------")
         return BeanPostProcessor.super.postProcessAfterInitialization(bean, beanName);
     }
 
     @Override 
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeanException {
+        System.out.println("-----在初始化之后执行------")
         return BeanPostProcessor.super.postProcessBeforeInitialization(bean, beanName);
+
     }
 }
 
+<bean init-method="init" 
+      destroy-method="die"
+      id="cat" class="com.ithuangqing.bean.Cat" 
+      p:name="p名称命名空间注入"/>
 
-庆哥您好，我是您的 Java 终身会员，您的课讲解特别清晰，最近在跟着课程学习 spring 
-我发现 spring 的视频 在 spring bean 之后就没有了，有一些 folder是空的，没有视频，想问下您，这是您还没录制视频吗？还是我需要在别的地方找呢？谢谢
+<bean class="com.ithuangqing.processor.TestBeanProcessor" />
+
+ApplicatinContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+
+我们这里的 Cat 对象是通过 applicationContext 这个容器创建的，这个容器是读取了 applicationContext.xml 
+那么，在 applicationContext.xml 里面配置的所有 bean 对象 都会应用这个后置处理器
+这个后置处理器 对当前容器中的 所有 bean 对象都有效，都有用
+这个后置处理器会出现在这个容器中的每一个 bean 的生命周期当中
+
+会打印：
+cat对象实例化了.....    
+bean属性注入.....       
+---在初始化之前执行---
+初识化bean.....
+---在初始化之后执行---
+cat = Cat{name='p命名空间注入'}
+销毁bean....
 
