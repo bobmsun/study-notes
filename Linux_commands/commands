@@ -1,0 +1,20 @@
+scp   secure copy
+
+ssh   ssh into a server
+
+ssh (user name)@(public ipv4 address) -i MyNVKP.pem
+ssh ec2-user@54.226.207.77 -i MyNVKP.pem
+
+chmod   chmod 400
+
+grep???
+
+sudo su    --  elevate the previlleges to root, now have root user access
+
+
+yam update -y
+
+
+echo "Hello" > hello.txt
+cat hello.txt      (会 print out： Hello)
+
